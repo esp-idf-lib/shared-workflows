@@ -1,0 +1,5 @@
+---
+# for testing, the only required attribute is targets.
+targets:
+  - esp32
+  - esp32p4
