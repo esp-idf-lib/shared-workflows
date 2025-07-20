@@ -1,0 +1,111 @@
+---
+name: Build examples
+
+# A reuseable workflow that builds all examples under `examples` in a matrix
+# of all posible combinations, targets and esp-idf versins. Does not support
+# ESP8266.
+#
+# Usage:
+#
+# ---
+# name: Build examples
+# on:
+#   push:
+#   # or other events
+# jobs:
+#   build-examples-from-other-repo:
+#     uses: esp-idf-lib/shared-workflows/.github/workflows/build-examples.yml
+#
+on:
+  workflow_call:
+
+jobs:
+  target:
+    runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.parse-eil.outputs.result }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Parse .eil.yml
+        # parse .eil.yml and retun a JSON string so that value `targets` can
+        # be used in matrix later.
+        #
+        # `result` is a JSON string. esp8266 is rejected because the build
+        # job does not support esp8266.
+        id: parse-eil
+        run: |
+          echo result=`ruby -e "require 'yaml'; require 'json'; doc = YAML.safe_load(File.read('.eil.yml')); doc['targets'] = doc['targets'].reject { |e| e == 'esp8266' }; puts doc.to_json"` >> $GITHUB_OUTPUT
+          cat $GITHUB_OUTPUT
+
+  build:
+    runs-on: ubuntu-latest
+    needs:
+      - target
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.target.outputs.result).targets }}
+        esp-idf-version:
+          - v5.1
+          - v5.2
+          - v5.3
+          - v5.4
+          - latest
+
+    container:
+      # use docker container. faster. proven to work. 7m 55s, as of this
+      # writing, to finish building two almost empty examples.
+      #
+      # https://hub.docker.com/r/espressif/idf
+      #
+      # Other alternatives:
+      #
+      # install-esp-idf-action; Slow. Broken.
+      # https://github.com/espressif/install-esp-idf-action
+      #
+      # build-esp-idf-projects-action: Slow. Does not support multiple paths
+      # (matrix is required to build multiple examples). Does not support
+      # arbitrary command execution.
+      # https://github.com/espressif/build-esp-idf-projects-action
+      image: espressif/idf:${{ matrix.esp-idf-version }}
+      env:
+        IDF_CLONE_SHALLOW: 1
+        IDF_CLONE_SHALLOW_DEPTH: 1
+
+    steps:
+      - name: source export.sh
+        run: |
+          . ${IDF_PATH}/export.sh
+          env | grep "IDF_" >> ${GITHUB_ENV}
+          echo "PATH=${PATH}" >> ${GITHUB_ENV}
+
+      - name: Skip build if target is not supported
+        # set SKIP environment variable if the matrix.target is not supported by matrix.esp-idf-version
+        # as GitHub Action does not support early-exit.
+        # see https://github.com/orgs/community/discussions/82744
+        #
+        # note that all the steps below this step should have `if: ${{ env.SKIP != 'yes' }}`
+        run: |
+          if idf.py --list-targets | grep -q "${{ matrix.target }}"; then
+            echo "target ${{ matrix.target }} is supported"
+          else
+            echo "target ${{ matrix.target }} is NOT supported"
+            echo SKIP=yes >> "${GITHUB_ENV}"
+          fi
+
+      - uses: actions/checkout@v4
+        if: ${{ env.SKIP != 'yes' }}
+        with:
+          submodules: recursive
+
+      - name: Build examples
+        if: ${{ env.SKIP != 'yes' }}
+        shell: bash
+        run: |
+          EXAMPLES=`find examples -type d -maxdepth 1 -mindepth 1 | tr '\n' ' '`
+          for EXAMPLE in ${EXAMPLES}; do
+            (cd "${EXAMPLE}" && idf.py set-target ${{ matrix.target }} && idf.py build)
+          done
