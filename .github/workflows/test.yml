@@ -9,5 +9,7 @@ on:
       - synchronize
 
 jobs:
-  test:
+  build:
     uses: ./.github/workflows/build-examples.yml
+  build-docs:
+    uses: ./.github/workflows/build-docs.yml
