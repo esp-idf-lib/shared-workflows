@@ -2,10 +2,22 @@
 name: Build docs
 on:
   workflow_call:
+    inputs:
+      upload:
+        description: Upload generated HTML files
+        required: false
+        type: boolean
+
+    outputs:
+      artifact-id:
+        description: artifact-id of the uploaded HTML files.
+        value: ${{ jobs.build.outputs.artifact-id }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,3 +41,11 @@ jobs:
       - name: Build the docs
         run: |
           make -C docs all
+
+      - name: Upload HTML files
+        id: upload
+        if: ${{ inputs.upload }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-gh-pages
+          path: docs/_build/html

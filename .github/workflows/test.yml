@@ -13,3 +13,14 @@ jobs:
     uses: ./.github/workflows/build-examples.yml
   build-docs:
     uses: ./.github/workflows/build-docs.yml
+    with:
+      upload: true
+  verify-upload:
+    runs-on: ubuntu-latest
+    needs: build-docs
+    steps:
+      - name: Fail if artifact-id is not defined
+        if: ${{ ! needs.build-docs.outputs.artifact-id }}
+        run: |
+          echo "::error title=Failed to upload::Requested build-docs.yml to upload HTML files, but artifact-id is not defined
+          exit 1
