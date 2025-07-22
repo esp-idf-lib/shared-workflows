@@ -1,5 +1,9 @@
 ---
-# for testing, the only required attribute is targets.
+name: shared-workflows
+description: Shared GitHub Actions workflows for esp-idf-lib
 targets:
   - esp32
   - esp32p4
+copyrights:
+  - name: trombik
+    year: 2025
