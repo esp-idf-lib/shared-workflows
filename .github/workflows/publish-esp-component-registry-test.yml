@@ -1,0 +1,17 @@
+---
+name: Test publish-esp-component-registry.yml
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+jobs:
+  publish-esp-component-registry:
+    uses: ./.github/workflows/publish-esp-component-registry.yml
+    with:
+      components: |
+        shared-workflows:.
+    secrets:
+      api_token: ${{ secrets.ESP_TOKEN }}
