@@ -4,6 +4,9 @@ name: Validate the component with staging ESP Component Registry
 
 on:
   workflow_call:
+    secrets:
+      api_token:
+        required: true
     inputs:
       namespace:
         description: The namespace of the component.
@@ -21,13 +24,6 @@ on:
           mycomponent:.
 
           Be sure to double-quote the value above in the YAML file:
-
-          ```yaml
-          validate-with-esp-component-registry:
-            uses: ./.github/workflows/validate-with-esp-component-registry.yml@main
-            with:
-              components: "mycomponent:."
-          ```
         required: true
         type: string
 
@@ -43,4 +39,5 @@ jobs:
         with:
           namespace: ${{ inputs.namespace }}
           components: ${{ inputs.components }}
+          api_token: ${{ secrets.api_token }}
           dry_run: true

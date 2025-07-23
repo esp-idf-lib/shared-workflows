@@ -13,3 +13,5 @@ jobs:
     with:
       components: |
         shared-workflows:.
+    secrets:
+      api_token: ${{ secrets.ESP_TOKEN }}
