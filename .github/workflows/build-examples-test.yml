@@ -1,0 +1,11 @@
+---
+name: Test build-examples.yml
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+jobs:
+  build-examples:
+    uses: ./.github/workflows/build-examples.yml
