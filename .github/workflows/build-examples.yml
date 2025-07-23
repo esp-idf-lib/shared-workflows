@@ -109,3 +109,21 @@ jobs:
           for EXAMPLE in ${EXAMPLES}; do
             (cd "${EXAMPLE}" && idf.py set-target ${{ matrix.target }} && idf.py build)
           done
+
+  build-result:
+    if: ${{ always() }}
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    name: Final result of build matrix
+    steps:
+      # because it is impossible to "require status check to pass" with
+      # dynamic matrix, create a single job to conclude the result. this way,
+      # you can require only this status check in branch protection rules.
+      - name: Conclude the result of build matrix
+        run: |
+          if [ "${{ needs.build.result }}" == "success" ]; then
+            exit 0
+          else
+            exit 1
+          fi
