@@ -1,0 +1,58 @@
+---
+name: Pubish the component to ESP Component Registry
+# This workflow publishes the component to ESP Component Registry.
+
+on:
+  workflow_call:
+    secrets:
+      api_token:
+        required: true
+    inputs:
+      namespace:
+        description: The namespace of the component.
+        default: esp-idf-lib
+        required: false
+        type: string
+
+      components:
+        description: |
+          Semicolon or new-line separated list of component_name:relative/path pairs.
+          See `components` at https://github.com/espressif/upload-components-ci-action?tab=readme-ov-file#parameters
+          for more details.
+
+          An example for a single component repository named `mycomponent`:
+          mycomponent:.
+
+          Be sure to double-quote the value above in the YAML file:
+        required: true
+        type: string
+
+jobs:
+  publish-component:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable dry_run if github.repository is shared_workflows
+        # because the CI in shared_workflows publish the same version multiple
+        # times whenever a PR is opened.
+        #
+        # XXX it turned out that this work-around is not necessary, for now,
+        # because the action enables `--allow-existing` flag and even when the
+        # same version is published, the action dose not fail.
+        #
+        # see: https://github.com/espressif/upload-components-ci-action/issues/29
+        id: enable-dry-run
+        if: ${{ github.repository }} == "esp-idf-lib/shared_workflows"
+        run: |
+          echo "Enable --dry-run"
+          echo "result=yes" >> $GITHUB_OUTPUT
+
+      - name: Publish the component to ESP Component Registry
+        uses: espressif/upload-components-ci-action@v2
+        with:
+          namespace: ${{ inputs.namespace }}
+          components: ${{ inputs.components }}
+          api_token: ${{ secrets.api_token }}
+          dry_run: ${{ steps.enable-dry-run.outputs.result }}
