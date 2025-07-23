@@ -19,7 +19,7 @@ on:
           workflows call this workflow.
 
           Visit [Settings] > [Pages] (in the side bar at left) > [Source],
-          and choose [GitHub Actions] before setting `publish` to true.
+          and choose [GitHub Actions] as [Source] (under [Build and deployment]).
           Otherwise, the workflow fails.
 
           Next, call this workflow with permissions with
