@@ -1,9 +1,6 @@
 ---
-name: Test workflows
-# this workflow tests all the reusable workflows.
-
+name: Test build-examples.yml
 on:
-  push:
   pull_request:
     types:
       - opened
@@ -17,9 +14,6 @@ permissions:
   id-token: write
 
 jobs:
-  build-examples:
-    uses: ./.github/workflows/build-examples.yml
-
   build-docs:
     uses: ./.github/workflows/build-docs.yml
 
@@ -27,6 +21,7 @@ jobs:
     uses: ./.github/workflows/build-docs.yml
     with:
       publish: true
+
   verify-build-docs-and-publish:
     runs-on: ubuntu-latest
     needs: build-docs-and-publish
@@ -36,8 +31,3 @@ jobs:
         run: |
           echo "::error title=Failed to publish::Requested build-docs.yml to build and publish HTML files, but page_url is not defined"
           exit 1
-
-  validate-with-esp-component-registry:
-    uses: ./.github/workflows/validate-with-esp-component-registry.yml
-    with:
-      components: "shared-workflows: ."

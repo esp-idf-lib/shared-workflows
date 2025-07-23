@@ -17,16 +17,16 @@ on:
           See `components` at https://github.com/espressif/upload-components-ci-action?tab=readme-ov-file#parameters
           for more details.
 
-          An example for a single component repository:
-          mycomponent: .
+          An example for a single component repository named `mycomponent`:
+          mycomponent:.
 
           Be sure to double-quote the value above in the YAML file:
 
           ```yaml
           validate-with-esp-component-registry:
-            uses: ./.github/workflows/validate-with-esp-component-registry.yml
+            uses: ./.github/workflows/validate-with-esp-component-registry.yml@main
             with:
-              components: "mycomponent: ."
+              components: "mycomponent:."
           ```
         required: true
         type: string
@@ -42,5 +42,5 @@ jobs:
         uses: espressif/upload-components-ci-action@v2
         with:
           namespace: ${{ inputs.namespace }}
-          components: ${{ inputs.components }} .
+          components: ${{ inputs.components }}
           dry_run: true

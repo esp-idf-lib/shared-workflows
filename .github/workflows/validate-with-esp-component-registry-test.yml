@@ -1,0 +1,15 @@
+---
+name: Test validate-with-esp-component-registry.yml
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+jobs:
+  validate-with-esp-component-registry:
+    uses: ./.github/workflows/validate-with-esp-component-registry.yml
+    with:
+      components: |
+        shared-workflows:.
