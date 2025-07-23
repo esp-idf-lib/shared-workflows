@@ -1,23 +1,57 @@
 ---
 name: Build docs
+
+# This workflow builds docuemntation of a component and (optionally) publish
+# the generated HTML files on GitHub Pages.
+
 on:
   workflow_call:
     inputs:
-      upload:
-        description: Upload generated HTML files
+      publish:
         required: false
         type: boolean
+        default: false
+        description: |
+          Publish generated HTML files on GitHub Pages when true. When false,
+          the default, the workflow builds the documentation only.
+
+          Before using this feature, configure the repository from which
+          workflows call this workflow.
+
+          Visit [Settings] > [Pages] (in the side bar at left) > [Source],
+          and choose [GitHub Actions] before setting `publish` to true.
+          Otherwise, the workflow fails.
+
+          Next, call this workflow with permissions with
+
+          * pages: write
+          * id-token: write
+
+          The calling workflow should look like:
+
+          ---
+          name: Publish HTML files on GitHub Pages
+          on: push
+          permissions:
+            # required by actions/deploy-pages
+            pages: write
+            id-token: write
+          jobs:
+            publish:
+              uses: esp-idf-lib/shared-workflows/.github/workflows/build-docs.yml@main
+              with:
+                publish: true
 
     outputs:
-      artifact-id:
-        description: artifact-id of the uploaded HTML files.
-        value: ${{ jobs.build.outputs.artifact-id }}
+      page_url:
+        description: |
+          URL of the published Paegs when publish is true and the deployment is
+          successful.
+        value: ${{ jobs.deploy.outputs.page_url }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      artifact-id: ${{ steps.upload.outputs.artifact-id }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,10 +76,25 @@ jobs:
         run: |
           make -C docs all
 
-      - name: Upload HTML files
-        id: upload
-        if: ${{ inputs.upload }}
-        uses: actions/upload-artifact@v4
+      - name: Upload HTML files as artifact
+        if: ${{ inputs.publish }}
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: html-gh-pages
-          path: docs/_build/html
+          path: docs/_build/html/
+
+  deploy:
+    if: ${{ inputs.publish }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
