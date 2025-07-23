@@ -1,0 +1,5 @@
+---
+version: 1.0.0
+description: "This is a component for testing"
+url: https://github.com/esp-idf-lib/shared-workflows
+license: "MIT"

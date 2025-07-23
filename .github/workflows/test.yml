@@ -36,3 +36,8 @@ jobs:
         run: |
           echo "::error title=Failed to publish::Requested build-docs.yml to build and publish HTML files, but page_url is not defined"
           exit 1
+
+  validate-with-esp-component-registry:
+    uses: ./.github/workflows/validate-with-esp-component-registry.yml
+    with:
+      components: "shared-workflows: ."
