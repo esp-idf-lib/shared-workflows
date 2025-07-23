@@ -1,5 +1,5 @@
 ---
-name: Test build-examples.yml
+name: Test build-docs.yml
 on:
   pull_request:
     types:
