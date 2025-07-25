@@ -1,0 +1,12 @@
+---
+name: Test validate-component.yml
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+jobs:
+  validate-esp-idf-lib-component:
+    uses: ./.github/workflows/validate-component.yml
