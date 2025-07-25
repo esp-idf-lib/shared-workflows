@@ -1,0 +1,32 @@
+---
+name: Validate compoent with validate-esp-idf-lib-component validators
+
+on:
+  workflow_call:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      result:
+    steps:
+      - name: Checkout validate-esp-idf-lib-component
+        uses: actions/checkout@v4
+        with:
+          repository: esp-idf-lib/validate-esp-idf-lib-component
+          ref: main
+
+      - name: Setup ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+
+      - name: Checkout the component under test
+        uses: actions/checkout@v4
+        with:
+          path: repo
+
+      - name: Validte the repo
+        run: |
+          bundle exec rake spec
