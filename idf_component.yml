@@ -1,8 +1,17 @@
 ---
 version: 1.0.0
 description: "This is a component for testing"
-url: https://github.com/esp-idf-lib/shared-workflows
 license: "MIT"
 targets:
   - esp32
   - esp32p4
+maintainers:
+  - Tomoyuki Sakurai
+url: https://github.com/esp-idf-lib/core
+repository: https://github.com/esp-idf-lib/shared-workflows
+documentation: https://esp-idf-lib.github.io/shared-workflows/
+issues: https://github.com/esp-idf-lib/shared-workflows/issues
+discussion: https://github.com/esp-idf-lib/core/discussions
+files:
+  exclude:
+    - docs/**/*
