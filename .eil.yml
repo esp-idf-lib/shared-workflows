@@ -1,5 +1,6 @@
 ---
 name: shared-workflows
+version: 1.0.0
 description: Shared GitHub Actions workflows for esp-idf-lib
 targets:
   - esp32
