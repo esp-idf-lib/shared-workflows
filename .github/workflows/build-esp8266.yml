@@ -15,7 +15,8 @@ jobs:
       - name: Parse .eil.yml
         id: parse-eil
         run: |
-          bin/eil-q targets | uniq | grep esp8266
+          echo result=`bin/eil-q targets | uniq | grep esp8266` >> ${GITHUB_OUTPUT}
+          cat ${GITHUB_OUTPUT}
 
   build_esp8266:
     name: Build for ESP8266
