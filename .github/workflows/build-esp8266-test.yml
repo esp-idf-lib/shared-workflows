@@ -1,0 +1,12 @@
+---
+name: Test build-esp8266.yml
+on:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+jobs:
+  build-examples:
+    uses: ./.github/workflows/build-esp8266.yml

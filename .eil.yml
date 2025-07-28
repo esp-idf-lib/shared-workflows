@@ -5,6 +5,7 @@ description: Shared GitHub Actions workflows for esp-idf-lib
 targets:
   - esp32
   - esp32p4
+  - esp8266
 copyrights:
   - name: trombik
     year: 2025
