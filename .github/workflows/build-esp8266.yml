@@ -19,7 +19,7 @@ jobs:
 
   build_esp8266:
     name: Build for ESP8266
-    if: ${{ needs.target.outputs.result == "esp8266" }}
+    if: ${{ needs.target.outputs.result == 'esp8266' }}
     runs-on: ubuntu-latest
     needs:
       - prepare
