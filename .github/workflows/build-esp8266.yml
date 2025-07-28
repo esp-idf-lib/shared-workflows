@@ -22,7 +22,7 @@ jobs:
     if: ${{ needs.target.outputs.result == 'esp8266' }}
     runs-on: ubuntu-latest
     needs:
-      - prepare
+      - target
     strategy:
       fail-fast: false
       matrix:
@@ -52,10 +52,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-
-      - id: devtool_requirements
-        name: Install devtool requirements
-        run: pip install -r ./devtools/requirements.txt
 
       - id: prerequisites
         name: Install prerequisites
@@ -147,13 +143,6 @@ jobs:
           echo ${PATH}
           ${__PROJECT_GCC_FILE} --version
 
-          # find out drivers that do not support the target
-          EXCLUDE_COMPONENTS="$(python ./devtools/devtool.py target esp8266 -x)"
-          echo "EXCLUDE_COMPONENTS=${EXCLUDE_COMPONENTS}"
-          export EXCLUDE_COMPONENTS
-
-          components_to_build="${{ needs.prepare.outputs._ci_build_esp8266 }}"
-
           # XXX share cache between examples.
           # see "Compiling In Different Directories" in ccache(1)
           # |                                        |  4.0.1  | master  |
@@ -163,16 +152,10 @@ jobs:
           export CCACHE_BASEDIR="${__PROJECT_EXAMPLE_DIR}"
           export CCACHE_NOHASHDIR=true
 
-          echo "final components_to_build:"
-          echo "${components_to_build}"
-          for component_to_build in ${components_to_build}; do
-            cd ${GITHUB_WORKSPACE}
-            echo "Building examples for ${component_to_build} under directory ${__PROJECT_EXAMPLE_DIR}/${component_to_build}"
-            cd "${__PROJECT_EXAMPLE_DIR}/${component_to_build}"
-            for i in $(ls -d *); do
-              cd "${__PROJECT_EXAMPLE_DIR}/${component_to_build}/${i}"
-              echo "Building example ${i} for component ${component_to_build} in directory ${PWD}..."
-              make defconfig
-              make -j$(nproc)
-            done
+          for dir in `ls -1 examples`; do
+            cd "${dir}
+            echo "Building an example in directory ${PWD}..."
+            make defconfig
+            make -j$(nproc)
+            cd -
           done
