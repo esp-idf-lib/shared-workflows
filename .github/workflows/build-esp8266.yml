@@ -46,7 +46,7 @@ jobs:
           # XXX ESP8266 RTOS SDK uses old Kconfig parser, which does not
           # understand "rsource" keyword. Rewrite all the Kconfig.projbuild in
           # the example directories.
-          ruby devtools/rewrite_kconfig.rb examples/*/*/Kconfig.projbuild
+          bin/rewrite_kconfig examples/*/*/Kconfig.projbuild
 
       - id: setup_python
         name: Setup Python
