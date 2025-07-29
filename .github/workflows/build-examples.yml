@@ -27,6 +27,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Parse .eil.yml
         # parse .eil.yml and retun a JSON string so that value `targets` can

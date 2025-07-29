@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Parse .eil.yml
         id: parse-eil
@@ -32,7 +34,9 @@ jobs:
     steps:
       - id: checkout
         name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - id: setup_ruby
         name: Setup Ruby
@@ -104,7 +108,7 @@ jobs:
           echo "__PROJECT_TOOLCHAIN_VERSION=${__PROJECT_TOOLCHAIN_VERSION}" >> ${GITHUB_ENV}
 
       - name: Checkout the SDK
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: espressif/ESP8266_RTOS_SDK
           path: idf
