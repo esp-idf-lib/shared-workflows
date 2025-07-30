@@ -83,6 +83,7 @@ jobs:
           . ${IDF_PATH}/export.sh
           env | grep "IDF_" >> ${GITHUB_ENV}
           echo "PATH=${PATH}" >> ${GITHUB_ENV}
+          echo "ESP_IDF_LIB_CI=yes" >> ${GITHUB_ENV}
 
       - name: Skip build if target is not supported
         # set SKIP environment variable if the matrix.target is not supported by matrix.esp-idf-version
