@@ -1,0 +1,23 @@
+---
+name: style
+on:
+  workflow_call:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      result:
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install requirements
+        run: |
+          pip install astyle
+
+      - name: Validte sources with astyle
+        run: |
+          astyle --project --recursive '*.c,*.h'
+          git diff --exit-code

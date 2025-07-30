@@ -1,0 +1,9 @@
+---
+name: Test validate-astyle.yml
+
+on:
+  pull_request:
+    push:
+jobs:
+  validate-astyle:
+    uses: ./.github/workflows/validate-astyle.yml
