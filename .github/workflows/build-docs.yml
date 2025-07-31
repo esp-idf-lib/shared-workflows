@@ -76,6 +76,9 @@ jobs:
 
       - name: Build the docs
         run: |
+          echo "doxygen version: `doxygen --version`"
+          echo "breathe version: `breathe-apidoc --version`"
+          echo "sphinx version:  `sphinx-build --version`"
           make -C docs all
 
       - name: Upload HTML files as artifact
