@@ -74,9 +74,14 @@ jobs:
         run: |
           pip install -r docs/requirements.txt
 
+      - name: Run doxygen
+        uses: mattnotmitt/doxygen-action@v1.9.6
+        with:
+          working-directory: docs
+          doxyfile-path: ./doxygen.conf
+
       - name: Build the docs
         run: |
-          echo "doxygen version: `doxygen --version`"
           echo "breathe version: `breathe-apidoc --version`"
           echo "sphinx version:  `sphinx-build --version`"
           make -C docs all
