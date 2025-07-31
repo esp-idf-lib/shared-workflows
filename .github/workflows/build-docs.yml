@@ -90,6 +90,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs/_docs/xml
+          name: doxygen
 
       - name: Upload HTML files as artifact
         if: ${{ inputs.publish }}
