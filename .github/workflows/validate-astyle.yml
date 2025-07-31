@@ -21,3 +21,7 @@ jobs:
         run: |
           astyle --project --recursive '*.c,*.h'
           git diff --exit-code
+          if [ $? -ne 0 ]; then
+            echo "::error title=Style Error::The code does not follow our code style. Run\nastyle --project --recursive '*.c,*.h'\nto format the code"
+            exit 1
+          fi
