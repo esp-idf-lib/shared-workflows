@@ -85,14 +85,10 @@ jobs:
           doxyfile-path: ./doxygen.conf
 
       - name: Build the docs
-        # XXX using sudo is required because the previouse step, "Run doxygen"
-        # runs as a different user. During the `make` execution, generated XML
-        # file must be fixed before sphinx-build, using `sed`, resulting
-        # "permission denied".
         run: |
           echo "breathe version: `breathe-apidoc --version`"
           echo "sphinx version:  `sphinx-build --version`"
-          sudo make -C docs all
+          make -C docs all
 
       - name: Upload HTML files as artifact
         if: ${{ inputs.publish }}
