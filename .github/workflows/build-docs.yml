@@ -82,7 +82,6 @@ jobs:
           make -C docs all
 
       - name: Upload doxygen files as artifact for debug
-        if: ${{ inputs.publish }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs/_docs/xml
