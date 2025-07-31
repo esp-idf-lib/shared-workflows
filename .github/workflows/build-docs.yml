@@ -75,6 +75,10 @@ jobs:
           pip install -r docs/requirements.txt
 
       - name: Run doxygen
+        # XXX use version 1.9.6. 1.9.8 is broken and the output is corrupted.
+        # use the GitHub Action because, with packaged doxygen, version cannot
+        # be chosen.
+        # https://github.com/doxygen/doxygen/issues/11323
         uses: mattnotmitt/doxygen-action@v1.9.6
         with:
           working-directory: docs
@@ -85,12 +89,6 @@ jobs:
           echo "breathe version: `breathe-apidoc --version`"
           echo "sphinx version:  `sphinx-build --version`"
           make -C docs all
-
-      - name: Upload doxygen files as artifact for debug
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: docs/_docs/xml
-          name: doxygen
 
       - name: Upload HTML files as artifact
         if: ${{ inputs.publish }}
