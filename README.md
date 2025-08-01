@@ -71,7 +71,7 @@ details.
 > The workflows uses
 > [espressif/upload-components-ci-action](https://github.com/espressif/upload-components-ci-action)
 > internally. The GitHub Action needs an ESP Component Registry Token. Because
-> the token is set at the organization level (`ESP_TOKEN`) as a secret. No token is
+> the token is set at the organization level (`ESP_TOKEN`) as a secret, no token is
 > required when you call this workflow.
 
 ### validate-astyle.yml
