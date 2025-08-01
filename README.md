@@ -19,6 +19,18 @@ jobs:
 > Specify `@main` as the workflow version. This ensures all the components use
 > the latest workflows.
 
+<!-- vim-markdown-toc GFM -->
+
+* [Workflows](#workflows)
+    * [build-docs.yml](#build-docsyml)
+    * [build-examples.yml](#build-examplesyml)
+    * [publish-esp-component-registry.yml](#publish-esp-component-registryyml)
+    * [validate-astyle.yml](#validate-astyleyml)
+    * [validate-component.yml](#validate-componentyml)
+    * [validate-with-esp-component-registry.yml](#validate-with-esp-component-registryyml)
+
+<!-- vim-markdown-toc -->
+
 ## Workflows
 
 These workflows are enabled by default when a repository is created from
