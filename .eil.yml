@@ -11,6 +11,8 @@ groups:
 depends:
   - freertos
 thread_safe: n/a
+code_owners:
+  - trombik
 license: ISC
 copyrights:
   - name: trombik

@@ -1,0 +1,119 @@
+name: Issue Review with LLM
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write  # To post comments
+  contents: read # To check out the repo
+
+jobs:
+  review-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Send issue to LLM and post esponse
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_API_URL: ${{ secrets.LLM_API_URL }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+        shell: bash
+        run: |
+          echo fail if required variables are not set
+          if [ -z "$LLM_API_KEY" ] || [ -z "$LLM_API_URL" ] || [ -z "$LLM_MODEL}" ]; then
+            echo "Missing LLM API credentials or model name."
+            exit 1
+          fi
+          echo Extract issue details
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+          ISSUE_BODY="${{ github.event.issue.body }}"
+          ISSUE_NUMBER="${{ github.event.issue.number }}"
+          REPO="${{ github.repository }}"
+
+          echo Process .eil.yml file if it exists
+          if [ -f ".eil.yml" ]; then
+            EIL_YAML_CONTENT="$(cat .eil.yml)"
+          else
+            EIL_YAML_CONTENT="No .eil.yml found."
+          fi
+
+          echo Prepare a preamble
+          PREAMBLE="Thanks for reporting the issue.  @trombik will review the issue and get back to you soon. Mention @trombik if I don't within a week.  Below is the summary of the issue.
+
+          ---
+          "
+
+          PROMPT="You are a GitHub issue reviewer of esp-idf-lib repository, provide analysis.
+          As a reviewer, summarize the issue first in a few sentences. Focus on missing information.
+
+          Mention codeowners based on .eil.yml content when relevant. When mentioning, use @user without any YAML styling.
+
+          GOOD: @user
+          BAD: \`@user\`
+
+          No reasoning. No suggestions.
+
+          Add a disclaimer stating you have limited contexts and the analysis is not necessarily correct.
+          Format your response with clear sections:
+
+          1. Issue Summary
+          2. Relevant Code Owners
+          3. Disclaimer
+          "
+          echo Prepare payload for LLM API
+          PAYLOAD=$(jq -n \
+          --arg title "$ISSUE_TITLE" \
+          --arg body "$ISSUE_BODY" \
+          --arg eil_yaml_content "$EIL_YAML_CONTENT" \
+          --arg model "$LLM_MODEL" \
+          --arg prompt "$PROMPT" '
+          {
+            "model": "\($model)",
+            "max_tokens": 2048,
+            "messages": [
+              {
+                "role": "system",
+                "content": "\($prompt)\n\n .eil.yml content: \($eil_yaml_content)",
+              },
+              {
+                "role": "user",
+                "content": "\($title):\n\n\($body)",
+              }
+            ]
+          }')
+
+          echo Call LLM API with error handling
+          RESPONSE=$(curl -s -X POST "$LLM_API_URL" \
+              -H "Authorization: Bearer $LLM_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d "$PAYLOAD" || echo "{\"error\": \"Failed to get LLM response\"}")
+
+          echo Check for API errors
+          LLM_REPLY=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // ""')
+
+          echo Post LLM response as a comment on the issue
+
+          BODY=$(jq -n \
+          --arg preamble "$PREAMBLE" \
+          --arg llm_reply "$LLM_REPLY" \
+          '
+          {
+            "body": "\($preamble)\($llm_reply)"
+          }
+          ')
+          if [ -n "$LLM_REPLY" ]; then
+            echo "Posting comment with body: $BODY"
+            response=$(curl -v -X POST "https://api.github.com/repos/$REPO/issues/$ISSUE_NUMBER/comments" \
+              -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -d "$BODY" 2>&1) || true
+            echo "response: $response"
+          else
+            echo Do not post any comments in case of error.
+            echo "No valid LLM response received."
+            exit 1
+          fi
