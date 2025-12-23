@@ -1,0 +1,8 @@
+---
+name: Test build-weekly.yml
+on:
+  workflow_call:
+
+jobs:
+  build-examples:
+    uses: ./.github/workflows/build-weekly.yml

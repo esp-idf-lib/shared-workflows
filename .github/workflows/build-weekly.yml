@@ -1,0 +1,83 @@
+---
+# A cron workflow to catch breaking changes in the development branch of
+# esp-idf.
+#
+# An example usage:
+#
+# ---
+# name: Build weekly
+# on:
+#   schedule:
+#     # run once a week
+#     - cron: '0 7 * * 1'
+#
+# jobs:
+#   build-examples:
+#     uses: ./.github/workflows/build-weekly.yml@main
+
+name: Weekly Build
+
+on:
+  workflow_call:
+
+jobs:
+  build:
+    name: Run Build
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          # To limit the workflow usage, target esp32 only. This will catch
+          # most of breaking changes in esp-idf.
+          - esp32
+        esp-idf-version:
+
+          # As the purpose of the test is to catch breaking changes in the
+          # development branch, use latest only.
+          - latest
+
+    container:
+      image: espressif/idf:${{ matrix.esp-idf-version }}
+      env:
+        IDF_CLONE_SHALLOW: 1
+        IDF_CLONE_SHALLOW_DEPTH: 1
+
+    steps:
+      - name: source export.sh
+        run: |
+          echo "::notice::Exporting environment variables" from ${IDF_PATH}/export.sh"
+          . ${IDF_PATH}/export.sh
+          env | grep "IDF_" >> ${GITHUB_ENV}
+          echo "PATH=${PATH}" >> ${GITHUB_ENV}
+          echo "ESP_IDF_LIB_CI=yes" >> ${GITHUB_ENV}
+
+      - name: Skip build if target is not supported
+        # set SKIP environment variable if the matrix.target is not supported by matrix.esp-idf-version
+        # as GitHub Action does not support early-exit.
+        # see https://github.com/orgs/community/discussions/82744
+        #
+        # note that all the steps below this step should have `if: ${{ env.SKIP != 'yes' }}`
+        run: |
+          if idf.py --list-targets | grep -q "${{ matrix.target }}"; then
+            echo "::notice::Target ${{ matrix.target }} is supported"
+          else
+          echo "::notice::Target ${{ matrix.target }} is NOT supported"
+            echo SKIP=yes >> "${GITHUB_ENV}"
+          fi
+
+      - uses: actions/checkout@v4
+        if: ${{ env.SKIP != 'yes' }}
+        with:
+          submodules: recursive
+
+      - name: Build examples
+        if: ${{ env.SKIP != 'yes' }}
+        shell: bash
+        run: |
+          EXAMPLES=`find examples -type d -maxdepth 1 -mindepth 1 | tr '\n' ' '`
+          for EXAMPLE in ${EXAMPLES}; do
+          echo "::notice::Building ${EXAMPLE}"
+            (cd "${EXAMPLE}" && idf.py set-target ${{ matrix.target }} && idf.py build)
+         done
