@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      # Allow all matrix combinations to run
       fail-fast: false
       matrix:
         target:
@@ -47,10 +48,12 @@ jobs:
     steps:
       - name: source export.sh
         run: |
-          echo "::notice::Exporting environment variables" from ${IDF_PATH}/export.sh"
+          echo "::notice::Exporting environment variables from ${IDF_PATH}/export.sh"
           . ${IDF_PATH}/export.sh
           env | grep "IDF_" >> ${GITHUB_ENV}
           echo "PATH=${PATH}" >> ${GITHUB_ENV}
+
+          # Some compile-time checks are enforced when ESP_IDF_LIB_CI is defined.
           echo "ESP_IDF_LIB_CI=yes" >> ${GITHUB_ENV}
 
       - name: Skip build if target is not supported
@@ -78,6 +81,6 @@ jobs:
         run: |
           EXAMPLES=`find examples -type d -maxdepth 1 -mindepth 1 | tr '\n' ' '`
           for EXAMPLE in ${EXAMPLES}; do
-          echo "::notice::Building ${EXAMPLE}"
+            echo "::notice::Building ${EXAMPLE}"
             (cd "${EXAMPLE}" && idf.py set-target ${{ matrix.target }} && idf.py build)
-         done
+          done
