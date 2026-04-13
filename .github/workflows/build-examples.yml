@@ -50,6 +50,41 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJSON(needs.target.outputs.result).targets }}
+        # How to add a new release of esp-idf to the test
+        #
+        # All the components defaults to `main` branch of this repository so
+        # that all components use the latest version of the tests (no manual
+        # update is necessary). Due to this, when adding a new version, it is
+        # necessary to test the change by modifying a component. Here is how.
+        #
+        # when adding a new release, make sure that the corresponding ESP-IDF
+        # Docker Image is available at:
+        # https://hub.docker.com/r/espressif/idf
+        #
+        # 1. Create a branch, such as `esp-idf-new-version` in this repository
+        # 2. Add the new esp-idf-version, such as `v6.0`, to matrix.target below
+        # 3. Push the new branch to GitHub
+        # 4. Update one of the components (esp_idf_lib_helpers is a good
+        #    choice) in a test branch, such as esp-idf-new-version
+        #
+        # An example:
+        # jobs:
+        #   build-examples:
+        #     uses: esp-idf-lib/shared-workflows/.github/workflows/build-examples.yml@esp-idf-new-version
+        #
+        # 5. browse the chosen component on GitHub
+        # 6. Click [Actions] tab
+        # 7. Click [Build docs] in the sidebar at left
+        # 8. Click [Run workflow] button
+        # 9. Select the branch for the test
+        # 10. Click [Run workflow]
+        # 11. See if the test suceeds.
+        #
+        # After successful test, merge `esp-idf-new-version` branch on THIS
+        # respository to `main` branch (you may remove `esp-idf-new-version`
+        # branch for the chosen component).
+        #
+        # After this, all the components will use the new version of the test.
         esp-idf-version:
           - v5.2
           - v5.3
