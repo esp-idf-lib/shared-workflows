@@ -55,6 +55,7 @@ jobs:
           - v5.3
           - v5.4
           - v5.5
+          - v6.0
           - latest
 
     container:
