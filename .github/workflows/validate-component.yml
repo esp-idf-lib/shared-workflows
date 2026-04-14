@@ -11,19 +11,22 @@ jobs:
       result:
     steps:
       - name: Checkout validate-esp-idf-lib-component
-        uses: actions/checkout@v4
+        # v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: esp-idf-lib/validate-esp-idf-lib-component
           ref: main
 
       - name: Setup ruby
-        uses: ruby/setup-ruby@v1
+        # v1.301.0
+        uses: ruby/setup-ruby@4c56a21280b36d862b5fc31348f463d60bdc55d5
         with:
           ruby-version: "3.2"
           bundler-cache: true
 
       - name: Checkout the component under test
-        uses: actions/checkout@v4
+        # v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           path: repo
           submodules: recursive
