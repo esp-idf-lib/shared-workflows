@@ -82,7 +82,7 @@ jobs:
         # be chosen.
         # https://github.com/doxygen/doxygen/issues/11323
         # v1.9.6
-        uses: mattnotmitt/doxygen-action@e7fbbabda6c2c52b59c2294184cfceca7e9d4254
+        uses: mattnotmitt/doxygen-action@b84fe17600245bb5db3d6c247cc274ea98c15a3b
         with:
           working-directory: docs
           doxyfile-path: ./doxygen.conf

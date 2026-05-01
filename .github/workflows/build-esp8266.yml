@@ -10,7 +10,7 @@ jobs:
       result: ${{ steps.parse-eil.outputs.result }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -34,7 +34,7 @@ jobs:
     steps:
       - id: checkout
         name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -54,7 +54,7 @@ jobs:
 
       - id: setup_python
         name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -108,7 +108,7 @@ jobs:
           echo "__PROJECT_TOOLCHAIN_VERSION=${__PROJECT_TOOLCHAIN_VERSION}" >> ${GITHUB_ENV}
 
       - name: Checkout the SDK
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: espressif/ESP8266_RTOS_SDK
           path: idf
@@ -123,7 +123,7 @@ jobs:
       - id: cache-idf-tools
         name: Cache toolchain
         if: ${{ matrix.branch != 'master' }}
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: ${{ steps.set_env.outputs.PROJECT_TOOLCHAIN_DIR }}
           key: ${{ runner.os }}-${{ matrix.branch }}-esp8266-cache-tools
