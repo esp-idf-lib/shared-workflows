@@ -16,7 +16,7 @@ jobs:
 
       - name: Install requirements
         run: |
-          pip install astyle
+          pip install astyle==3.6.10
 
       - name: Validte sources with astyle
         run: |
