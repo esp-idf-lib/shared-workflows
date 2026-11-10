@@ -81,8 +81,12 @@ jobs:
         if: ${{ env.SKIP != 'yes' }}
         shell: bash
         run: |
-          EXAMPLES=`find examples -type d -maxdepth 1 -mindepth 1 | tr '\n' ' '`
+          EXAMPLES=`find examples -type d -maxdepth 1 -mindepth 1 | sort`
           for EXAMPLE in ${EXAMPLES}; do
+            if [ ! -f "${EXAMPLE}/CMakeLists.txt" ]; then
+              echo "::notice::Skipping ${EXAMPLE}: no CMakeLists.txt"
+              continue
+            fi
             echo "::notice::Building ${EXAMPLE}"
             (cd "${EXAMPLE}" && idf.py set-target ${{ matrix.target }} && idf.py build)
           done
