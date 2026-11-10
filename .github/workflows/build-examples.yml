@@ -155,13 +155,18 @@ jobs:
         shell: bash
         run: |
           EXAMPLES=`find examples -type d -maxdepth 1 -mindepth 1 | sort`
+          rc=0
           for EXAMPLE in ${EXAMPLES}; do
             if [ ! -f "${EXAMPLE}/CMakeLists.txt" ]; then
               echo "::notice::Skipping ${EXAMPLE}: no CMakeLists.txt"
               continue
             fi
-            (cd "${EXAMPLE}" && idf.py set-target ${{ matrix.target }} && idf.py build)
+            if ! (cd "${EXAMPLE}" && idf.py set-target ${{ matrix.target }} && idf.py build); then
+              echo "::error::Failed to build ${EXAMPLE}"
+              rc=1
+            fi
           done
+          exit ${rc}
 
   build-result:
     if: ${{ always() }}
