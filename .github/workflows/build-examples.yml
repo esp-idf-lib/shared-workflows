@@ -94,11 +94,10 @@ jobs:
         #
         # After this, all the components will use the new version of the test.
         esp-idf-version:
-          - v5.2
-          - v5.3
           - v5.4
           - v5.5
           - v6.0
+          - v6.1
           - latest
 
     container:
