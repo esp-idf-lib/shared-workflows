@@ -23,24 +23,44 @@ jobs:
   target:
     runs-on: ubuntu-latest
     outputs:
-      result: ${{ steps.parse-eil.outputs.result }}
+      result: ${{ steps.matrix.outputs.result }}
     steps:
-      - name: Checkout
-        # v6.0.2
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          submodules: recursive
-
-      - name: Parse .eil.yml
-        # parse .eil.yml and retun a JSON string so that value `targets` can
-        # be used in matrix later.
+      - name: Build the matrix of targets and esp-idf versions
+        # `result` is a JSON array of objects, each having `target` and
+        # `esp-idf-version`. The same pair is used by the `build` job.
         #
-        # `result` is a JSON string. esp8266 is rejected because the build
-        # job does not support esp8266.
-        id: parse-eil
+        # The targets are taken from SUPPORTED_TARGETS in
+        # `tools/idf_py_actions/constants.py` of the corresponding ESP-IDF
+        # release, exactly what `idf.py --list-targets` prints. A new chip
+        # therefore shows up in the matrix without any change in the
+        # components. `latest` follows the `master` branch and corresponds to
+        # the `espressif/idf:latest` image.
+        #
+        # Only the list of versions is maintained by hand: add a version here
+        # when it is released and its Docker image is available at
+        # https://hub.docker.com/r/espressif/idf
+        id: matrix
+        shell: bash
         run: |
-          echo result=`ruby -e "require 'yaml'; require 'json'; doc = YAML.safe_load(File.read('.eil.yml')); doc['targets'] = doc['targets'].reject { |e| e == 'esp8266' }; puts doc.to_json"` >> $GITHUB_OUTPUT
-          cat $GITHUB_OUTPUT
+          versions="v5.4 v5.5 v6.0 v6.1 master"
+          pairs=$(mktemp)
+          for version in ${versions}; do
+            name=${version}
+            if [ "${version}" = "master" ]; then
+              name=latest
+            fi
+            curl -fsSL \
+              "https://raw.githubusercontent.com/espressif/esp-idf/${version}/tools/idf_py_actions/constants.py" \
+              | awk '/^SUPPORTED_TARGETS/{found=1} found{print} found&&/\]/{exit}' \
+              | grep -o "'esp32[a-z0-9]*'" \
+              | tr -d "'" \
+              | while read -r target; do
+                  echo "{\"target\":\"${target}\",\"esp-idf-version\":\"${name}\"}"
+                done >> "${pairs}"
+          done
+          echo "result=$(jq -sc '.' "${pairs}")" >> "${GITHUB_OUTPUT}"
+          jq -sr 'group_by(.["esp-idf-version"])[] | "\(.[0]["esp-idf-version"]): \(length) targets"' \
+            "${pairs}" | sort
 
   build:
     runs-on: ubuntu-latest
@@ -50,7 +70,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ${{ fromJSON(needs.target.outputs.result).targets }}
+        # One job per (target, esp-idf-version) pair supported by that
+        # version. No job is scheduled just to be skipped.
+        include: ${{ fromJSON(needs.target.outputs.result) }}
         # How to add a new release of esp-idf to the test
         #
         # when adding a new release, make sure that the corresponding ESP-IDF
@@ -70,7 +92,11 @@ jobs:
         # necessary).
         #
         # 1. Create a branch, such as `esp-idf-new-version` in this repository
-        # 2. Add the new esp-idf-version, such as `v6.0`, to matrix.target below
+        # 2. Add the new esp-idf-version, such as `v6.1`, and the targets it
+        #    supports to the `targets` mapping in the `target` job above. The
+        #    targets must match SUPPORTED_TARGETS in
+        #    `tools/idf_py_actions/constants.py` of that release (for `latest`,
+        #    of the `master` branch).
         # 3. Push the new branch to GitHub
         # 4. Update one of the components (esp_idf_lib_helpers is a good
         #    choice) in a test branch, such as esp-idf-new-version
@@ -93,12 +119,6 @@ jobs:
         # branch for the chosen component).
         #
         # After this, all the components will use the new version of the test.
-        esp-idf-version:
-          - v5.4
-          - v5.5
-          - v6.0
-          - v6.1
-          - latest
 
     container:
       # use docker container. faster. proven to work. 7m 55s, as of this
@@ -128,29 +148,13 @@ jobs:
           echo "PATH=${PATH}" >> ${GITHUB_ENV}
           echo "ESP_IDF_LIB_CI=yes" >> ${GITHUB_ENV}
 
-      - name: Skip build if target is not supported
-        # set SKIP environment variable if the matrix.target is not supported by matrix.esp-idf-version
-        # as GitHub Action does not support early-exit.
-        # see https://github.com/orgs/community/discussions/82744
-        #
-        # note that all the steps below this step should have `if: ${{ env.SKIP != 'yes' }}`
-        run: |
-          if idf.py --list-targets | grep -q "${{ matrix.target }}"; then
-            echo "target ${{ matrix.target }} is supported"
-          else
-            echo "target ${{ matrix.target }} is NOT supported"
-            echo SKIP=yes >> "${GITHUB_ENV}"
-          fi
-
       - name: Checkout
         # v6.0.2
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        if: ${{ env.SKIP != 'yes' }}
         with:
           submodules: recursive
 
       - name: Build examples
-        if: ${{ env.SKIP != 'yes' }}
         shell: bash
         run: |
           EXAMPLES=`find examples -type d -maxdepth 1 -mindepth 1 | sort`
