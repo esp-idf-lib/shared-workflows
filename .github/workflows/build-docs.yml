@@ -74,7 +74,9 @@ jobs:
 
       - name: Install python packages
         run: |
-          pip install -r docs/requirements.txt
+          # PyYAML is not a dependency of sphinx anymore, and the replacement
+          # for bin/eil-q reads .eil.yml with it
+          pip install -r docs/requirements.txt pyyaml
 
       - name: Run doxygen
         # XXX use version 1.9.6. 1.9.8 is broken and the output is corrupted.
@@ -91,7 +93,33 @@ jobs:
         run: |
           echo "breathe version: `breathe-apidoc --version`"
           echo "sphinx version:  `sphinx-build --version`"
-          make -C docs all
+
+          # The Makefile reads the component metadata through `bin/eil-q`,
+          # which is a Ruby script. Give it the Python implementation instead,
+          # so that the build does not need Ruby at all.
+          cat > "${RUNNER_TEMP}/eil-q" <<'PY'
+          #!/usr/bin/env python3
+          import os
+          import pathlib
+          import sys
+
+          import yaml
+
+          root = pathlib.Path(os.environ.get("EIL_REPO_ROOT", ".")).resolve()
+          doc = yaml.safe_load((root / ".eil.yml").read_text())
+          key = sys.argv[1]
+          if key == "copyright_string":
+              print(", ".join("%s, %s" % (c["year"], c["name"]) for c in doc["copyrights"]))
+          else:
+              value = doc.get(key)
+              if isinstance(value, list):
+                  print("\n".join(str(v) for v in value))
+              else:
+                  print(value)
+          PY
+          chmod +x "${RUNNER_TEMP}/eil-q"
+
+          EIL_REPO_ROOT="$(pwd)" make -C docs all EIL_CMD="${RUNNER_TEMP}/eil-q"
 
       - name: Upload HTML files as artifact
         if: ${{ inputs.publish }}

@@ -1,5 +1,5 @@
 ---
-name: Validate compoent with validate-esp-idf-lib-component validators
+name: Validate component with validate-esp-idf-lib-component validators
 
 on:
   workflow_call:
@@ -17,12 +17,17 @@ jobs:
           repository: esp-idf-lib/validate-esp-idf-lib-component
           ref: main
 
-      - name: Setup ruby
-        # v1.301.0
-        uses: ruby/setup-ruby@4c56a21280b36d862b5fc31348f463d60bdc55d5
+      - name: Setup python
+        # v5
+        uses: actions/setup-python@v5
         with:
-          ruby-version: "3.2"
-          bundler-cache: true
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install the dependencies
+        run: |
+          pip install -r requirements.txt
 
       - name: Checkout the component under test
         # v6.0.2
@@ -31,6 +36,6 @@ jobs:
           path: repo
           submodules: recursive
 
-      - name: Validte the repo
+      - name: Validate the repo
         run: |
-          bundle exec rake spec
+          pytest -v
